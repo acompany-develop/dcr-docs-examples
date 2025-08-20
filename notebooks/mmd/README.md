@@ -3,5 +3,5 @@
 # コマンドのインストール
 npm install -g @mermaid-js/mermaid-cli
 # 変換
-mmdc -i '/Users/takumi.hiraoka/subwork/apc-cli-private/src/sequence-diagram.mmd' -o apc_sequence.png
+mmdc -i <mermaid_path> -o <output_img_path>
 ```

@@ -1,0 +1,87 @@
+sequenceDiagram
+    actor user1 as ユーザー1
+    actor user2 as ユーザー2
+    participant AutoPrivacyDCR as AutoPrivacy DCR
+
+    %% 手順 2: 環境変数設定
+    Note over user1, user2: 手順 2: 環境変数設定
+    user1->>user1: .envファイルで環境変数を設定
+    user2->>user2: .envファイルで環境変数を設定
+
+    %% 手順 3: ライブラリのインストール
+    Note over user1, user2: 手順 3: ライブラリのインストール
+    user1->>user1: packagesディレクトリに依存ライブラリをインストール
+    user2->>user2: packagesディレクトリに依存ライブラリをインストール
+
+    %% 手順 4: APC-CLIのセットアップ
+    Note over user1, user2: 手順 4: APC-CLIのセットアップ
+    user1->>user1: CLIバイナリをダウンロード・インストール
+    user2->>user2: CLIバイナリをダウンロード・インストール
+    user1->>user1: apc --version でインストール確認
+    user2->>user2: apc --version でインストール確認
+
+    %% 手順 5: プロファイル設定
+    Note over user1, user2: 手順 5: プロファイル設定
+    user1->>user1: apc configure --profile user1, USER IDを生成
+    user2->>user2: apc configure --profile user2, USER IDを生成
+
+    %% 手順 6: 入出力設定ファイルの生成
+    Note over user1, user2: 手順 6: 入出力設定ファイルの生成
+    user1->>user1: encrypted-files.yamlを作成
+
+    %% 手順 7: 認証とヘルスチェック
+    Note over user1, user2: 手順 7: 認証とヘルスチェック
+    user1->>AutoPrivacyDCR: apc auth-login --profile user1
+    AutoPrivacyDCR->>user1: 認証完了
+    user2->>AutoPrivacyDCR: apc auth-login --profile user2
+    AutoPrivacyDCR->>user2: 認証完了
+
+    user1->>AutoPrivacyDCR: apc healthcheck --profile user1
+    AutoPrivacyDCR->>user1: ヘルスチェック結果
+    user2->>AutoPrivacyDCR: apc healthcheck --profile user2
+    AutoPrivacyDCR->>user2: ヘルスチェック結果
+
+    %% 手順 8: プロジェクト設定
+    Note over user1, user2: 手順 8: プロジェクト設定
+    user1->>AutoPrivacyDCR: apc set-project PROJECT_ID --profile user1
+    user2->>AutoPrivacyDCR: apc set-project PROJECT_ID --profile user2
+
+    %% 手順 9: 関数ストレージへのアップロード
+    Note over user1, user2: 手順 9: 関数ストレージへのアップロード
+    user1->>AutoPrivacyDCR: apc function-storage upload --source function/ --profile user1
+    AutoPrivacyDCR->>user1: FunctionStoragePathを返却
+
+    %% 手順 10: Cleanroomデプロイ
+    Note over user1, user2: 手順 10: Cleanroomデプロイ
+    user1->>AutoPrivacyDCR: apc cleanroom deploy --source FunctionStoragePath --name join_app --profile user1
+    AutoPrivacyDCR->>AutoPrivacyDCR: Cleanroomのデプロイ
+
+    %% 手順 11: データのCleanroomへのコピー
+    Note over user1, user2: 手順 11: データのCleanroomへのコピー
+    user1->>AutoPrivacyDCR: apc cleanroom data cp input_1/ join_app:input_1 --profile user1
+    user2->>AutoPrivacyDCR: apc cleanroom data cp input_2/ join_app:input_2 --profile user2
+
+    %% 手順 12: Cleanroomの実行
+    Note over user1, user2: 手順 12: Cleanroomの実行
+    user1->>AutoPrivacyDCR: apc cleanroom run join_app --profile user1
+    AutoPrivacyDCR->>AutoPrivacyDCR: Cleanroomの実行
+    AutoPrivacyDCR->>user1: 実行完了通知
+
+    %% 手順 13: 結果のダウンロード
+    Note over user1, user2: 手順 13: 結果のダウンロード
+    user1->>AutoPrivacyDCR: apc cleanroom data cp join_app:output_1 output_1/ --profile user1
+    AutoPrivacyDCR->>user1: user1用の結果を提供
+    user1->>user1: 結果を復号して確認
+
+    user2->>AutoPrivacyDCR: apc cleanroom data cp join_app:output_2 output_2/ --profile user2
+    AutoPrivacyDCR->>user2: user2用の結果を提供
+    user2->>user2: 結果を復号して確認
+
+    %% 手順 14: クリーンアップ（オプション）
+    Note over user1, user2: 手順 14: クリーンアップ（オプション）
+    user1->>AutoPrivacyDCR: apc cleanroom delete join_app --profile user1
+    AutoPrivacyDCR->>AutoPrivacyDCR: Cleanroomアプリケーションの削除
+    user1->>AutoPrivacyDCR: apc function-storage delete FunctionStoragePath --profile user1
+    AutoPrivacyDCR->>AutoPrivacyDCR: アップロードされた関数の削除
+
+    Note over user1, user2: 企業間でデータの機密性を保ちながら<br/>安全なデータ連携が完了
