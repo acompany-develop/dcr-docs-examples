@@ -1,0 +1,141 @@
+name: "Ruff Format & Lint"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '**.py'
+  workflow_dispatch:
+
+jobs:
+  ruff-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Install ruff without running check or format
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: "--version"
+
+      - name: Run Ruff Format & Lint Check
+        id: ruff-format-lint
+        run: |
+          lf='\n'
+          message="## Ruff チェック結果"
+          
+          # フォーマットチェック
+          message+="${lf}### フォーマット"
+          FORMAT_FAILED=0
+          ruff format --check > format_output.txt 2>&1 || FORMAT_FAILED=1
+          FORMAT_OUTPUT=$(cat format_output.txt)
+          
+          echo "$FORMAT_OUTPUT"
+          
+          # フォーマット結果の処理
+          if [ "$FORMAT_FAILED" == "1" ]; then
+            message+="${lf}❌ フォーマットの問題が検出されました。"
+            message+="${lf}\`\`\`"
+            message+="${lf}${FORMAT_OUTPUT}"
+            message+="${lf}\`\`\`"
+          else
+            message+="${lf}✅ フォーマットの問題はありませんでした。"
+            if [ -n "$FORMAT_OUTPUT" ]; then
+              message+="${lf}\`\`\`"
+              message+="${lf}${FORMAT_OUTPUT}"
+              message+="${lf}\`\`\`"
+            fi
+          fi
+          
+          # # Lintチェック
+          message+="${lf}### Lint"
+          LINT_FAILED=0
+          ruff check > lint_output.txt 2>&1 || LINT_FAILED=1
+          LINT_OUTPUT=$(cat lint_output.txt)
+          
+          echo "$LINT_OUTPUT"
+          
+          # Lint結果の処理
+          if [ "$LINT_FAILED" == "1" ]; then
+            message+="${lf}❌ Lint の問題が検出されました。"
+            message+="${lf}\`\`\`"
+            message+="${lf}${LINT_OUTPUT}"
+            message+="${lf}\`\`\`"
+          else
+            message+="${lf}✅ Lint の問題はありませんでした。"
+            if [ -n "$LINT_OUTPUT" ]; then
+              message+="${lf}\`\`\`"
+              message+="${lf}${LINT_OUTPUT}"
+              message+="${lf}\`\`\`"
+            fi
+          fi
+          
+          # Base64エンコードして出力
+          echo "message=$(echo "$message" | base64 -w 0)" >> $GITHUB_OUTPUT
+          echo "format_failed=$FORMAT_FAILED" >> $GITHUB_OUTPUT
+          echo "lint_failed=$LINT_FAILED" >> $GITHUB_OUTPUT
+
+      - name: Comment PR with Results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Base64デコードして元のメッセージを取得
+            const base64Message = '${{ steps.ruff-format-lint.outputs.message }}';
+            const message = Buffer.from(base64Message, 'base64').toString('utf-8');
+            
+            // 改行を正しく処理するために、\nをリテラル改行に置換
+            const formattedMessage = message.replace(/\\n/g, '\n');
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.login === 'github-actions[bot]' && 
+              comment.body.includes('Ruff チェック結果')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: formattedMessage
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: formattedMessage
+              });
+            }
+
+      - name: Output Results for non-PR events
+        if: github.event_name != 'pull_request'
+        run: |
+          # Base64デコードして表示（printfで改行を処理）
+          printf "%b" "$(echo "${{ steps.ruff-format-lint.outputs.message }}" | base64 -d)"
+
+      - name: Fail if checks failed
+        if: steps.ruff-format-lint.outputs.format_failed == '1' || steps.ruff-format-lint.outputs.lint_failed == '1'
+        run: |
+          if [ "${{ steps.ruff-format-lint.outputs.format_failed }}" == "1" ]; then
+            echo "::error::フォーマットチェックが失敗しました"
+          fi
+          if [ "${{ steps.ruff-format-lint.outputs.lint_failed }}" == "1" ]; then
+            echo "::error::Lintチェックが失敗しました"
+          fi
+          exit 1
