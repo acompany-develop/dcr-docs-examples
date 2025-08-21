@@ -1,0 +1,31 @@
+name: "Run ai-reviewer"
+
+permissions:
+    pull-requests: write
+    contents: read
+
+on:
+    pull_request:
+        types: [opened, reopened, ready_for_review]
+    workflow_dispatch:
+
+jobs:
+    run-review:
+        runs-on: ubuntu-latest
+        steps:
+            - name: AI Review Bot
+              uses: acompany-develop/ai-reviewer@latest
+              with:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+                  LANGUAGE: |-
+                    Japanese
+                    English
+                  PRIORITY_FILTER: |-
+                        PRIORITY:HIGH
+                        PRIORITY:MEDIUM
+                        PRIORITY:LOW
+                        PRIORITY:POSITIVE
+                  # ref: https://www.notion.so/acompany-ac/Generic-PR-Review-guidelines-PR-13b269d8558680f6918bdccee7812efb
+                  EXTRA_PROMPT: |-
+                        ${{ vars.PR_REVIEW_POLICY_FOR_LLM }}

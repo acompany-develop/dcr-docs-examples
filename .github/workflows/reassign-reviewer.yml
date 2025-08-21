@@ -1,0 +1,59 @@
+name: Re-assign reviewers even after approval
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  keep_team_reviewers:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Re-assign platform Team After Approval
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.WORKFLOW_PAT }}
+          script: |
+            const { owner, repo, number } = context.issue;
+            const review = context.payload.review;
+            
+            console.log(`Review submitted by ${review.user.login} with state: ${review.state}`);
+            
+            // Check if this was an approval
+            if (review.state === 'approved') {
+              console.log('Review was an approval, checking team reviewers status');
+              
+              try {
+                const teamSlug = "platform";
+                
+                // Re-request review using the correct team slug format
+                await github.rest.pulls.requestReviewers({
+                  owner,
+                  repo,
+                  pull_number: number,
+                  team_reviewers: [teamSlug]
+                });
+                
+                console.log(`Successfully re-requested review from team: ${teamSlug}`);
+              } catch (error) {
+                console.error('Error re-requesting team review:');
+                console.error(`Status: ${error.status}`);
+                console.error(`Message: ${error.message}`);
+                
+                // If re-requesting fails, fall back to a comment
+                try {
+                  await github.rest.issues.createComment({
+                    owner,
+                    repo,
+                    issue_number: number,
+                    body: '✅ This PR has been approved, but other members of @acompany-develop/platform may still want to review it.'
+                  });
+                  console.log('Added comment mentioning the team as fallback');
+                } catch (commentError) {
+                  console.error('Error adding comment:', commentError.message);
+                }
+              }
+            } else {
+              console.log('Review was not an approval, no action taken');
+            }
