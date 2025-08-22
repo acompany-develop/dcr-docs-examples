@@ -99,3 +99,4 @@ def run():
         if tb:
             for i, frame in enumerate(tb):
                 print_log(f"error location {i + 1}: {frame.filename}:{frame.lineno}")
+        raise e
