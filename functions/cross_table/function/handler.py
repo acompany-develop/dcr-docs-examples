@@ -3,6 +3,11 @@ import sys
 import traceback
 from datetime import datetime
 
+# 依存ライブラリがある場合は、packagesディレクトリをパスに追加
+sys.path.append("/work/function/packages")
+
+import polars as pl
+
 # 作業ディレクトリとI/Oディレクトリのパス設定
 WORK_DIR = "/work"
 INPUT_DIR = f"{WORK_DIR}/inputs"
@@ -11,11 +16,6 @@ INPUT_1_DIR = f"{INPUT_DIR}/input_1"
 INPUT_2_DIR = f"{INPUT_DIR}/input_2"
 OUTPUT_1_DIR = f"{OUTPUT_DIR}/output_1"
 OUTPUT_2_DIR = f"{OUTPUT_DIR}/output_2"
-
-# 依存ライブラリがある場合は、packagesディレクトリをパスに追加
-sys.path.append(f"{WORK_DIR}/function/packages")
-
-import polars as pl
 
 THRESHOLD = 2  # 集計数がこの値未満の行は出力されない
 

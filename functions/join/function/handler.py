@@ -3,6 +3,11 @@ import sys
 import traceback
 from datetime import datetime
 
+# 依存ライブラリがある場合は、packagesディレクトリをパスに追加
+sys.path.append("/work/function/packages")
+
+import pandas as pd
+
 # 作業ディレクトリとI/Oディレクトリのパス設定
 WORK_DIR = "/work"
 INPUT_DIR = f"{WORK_DIR}/inputs"
@@ -11,11 +16,6 @@ INPUT_1_DIR = f"{INPUT_DIR}/input_1"
 INPUT_2_DIR = f"{INPUT_DIR}/input_2"
 OUTPUT_1_DIR = f"{OUTPUT_DIR}/output_1"
 OUTPUT_2_DIR = f"{OUTPUT_DIR}/output_2"
-
-# 依存ライブラリがある場合は、packagesディレクトリをパスに追加
-sys.path.append(f"{WORK_DIR}/function/packages")
-
-import pandas as pd
 
 
 def print_log(msg: str):
@@ -28,21 +28,13 @@ def print_log(msg: str):
 
 def join_data(input_1_path: str, input_2_path: str) -> pd.DataFrame:
     print_log("join_data: Started.")
-    
-    # 入力CSVファイルを読み込み
     df_1 = pd.read_csv(input_1_path)
     df_2 = pd.read_csv(input_2_path)
-    
-    # 両データフレームの最左列を結合キーとして取得
-    key_a = df_1.columns[0]  # 1つ目のファイルの最左列
-    key_b = df_2.columns[0]  # 2つ目のファイルの最左列
-    
-    # 内部結合を実行（両方のファイルに存在するキーのみ）
+    key_a = df_1.columns[0]
+    key_b = df_2.columns[0]
     df_joined = pd.merge(df_1, df_2, left_on=key_a, right_on=key_b)
-    
-    # 重複したキー列を削除（結合後のデータフレームには同じ値の列が2つ存在するため）
+    # 重複キーを削除
     df_joined = df_joined.drop(columns=[key_a, key_b])
-    
     print_log("join_data: Completed.")
     return df_joined
 
