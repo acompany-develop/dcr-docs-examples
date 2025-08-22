@@ -3,76 +3,63 @@ import sys
 import traceback
 from datetime import datetime
 
-"""
-Note: External packages are supposed to be installed in function/packages.
-"""
-sys.path.insert(0, "/work/function/packages")  # functionが依存するパッケージのパス
+# 依存ライブラリがある場合は、packagesディレクトリをパスに追加
+sys.path.append("/work/function/packages")
 
-WORK_DIR = "/work"  # functionが参照可能なディレクトリパス
-INPUT_A_PATH = (
-    f"{WORK_DIR}/inputs/input_1"  # acompany専用入力データ<input_a>のmount先パス
-)
-INPUT_B_PATH = (
-    f"{WORK_DIR}/inputs/input_2"  # bcompany専用入力データ<input_b>のmount先パス
-)
-OUTPUT_A_PATH = (
-    f"{WORK_DIR}/outputs/output_1"  # acompany専用出力データ<output_a>のmount先パス
-)
+import pandas as pd
+
+# 作業ディレクトリとI/Oディレクトリのパス設定
+WORK_DIR = "/work"
+INPUT_DIR = f"{WORK_DIR}/inputs"
+OUTPUT_DIR = f"{WORK_DIR}/outputs"
+INPUT_1_DIR = f"{INPUT_DIR}/input_1"
+INPUT_2_DIR = f"{INPUT_DIR}/input_2"
+OUTPUT_1_DIR = f"{OUTPUT_DIR}/output_1"
+OUTPUT_2_DIR = f"{OUTPUT_DIR}/output_2"
 
 
-def print_log(msg):
+def print_log(msg: str):
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    try:
-        os.makedirs(OUTPUT_A_PATH, exist_ok=True)
-        with open(os.path.join(OUTPUT_A_PATH, "app.log"), "a") as log_file:
-            log_file.write(f"[{current_time}]:[handler.py]: {msg}\n")
-    except Exception:
-        pass  # 出力ディレクトリへの書き込みに失敗しても続行
+    for path in [OUTPUT_1_DIR, OUTPUT_2_DIR]:
+        os.makedirs(path, exist_ok=True)
+        with open(os.path.join(path, "app.log"), "a") as log_file:
+            log_file.write(f"{current_time}:{msg}\n")
 
 
-# メモリ使用量と実行時間を計測するための関数
-def print_memory_usage():
-    try:
-        import psutil
-
-        process = psutil.Process(os.getpid())
-        memory_info = process.memory_info()
-        print_log(
-            f"Current memory usage: {memory_info.rss / 1024**2:.2f} MB"
-        )  # RSS: Resident Set Size (in MB)
-        return memory_info.rss
-    except Exception as e:
-        print_log(f"Failed to get memory usage. {str(e)}")
-        return 0
+def join_data(input_1_path: str, input_2_path: str) -> pd.DataFrame:
+    print_log("join_data: Started.")
+    df_1 = pd.read_csv(input_1_path)
+    df_2 = pd.read_csv(input_2_path)
+    key_a = df_1.columns[0]
+    key_b = df_2.columns[0]
+    df_joined = pd.merge(df_1, df_2, left_on=key_a, right_on=key_b)
+    # 重複キーを削除
+    df_joined = df_joined.drop(columns=[key_a, key_b])
+    print_log("join_data: Completed.")
+    return df_joined
 
 
 def run():
     try:
-        import pandas as pd
+        print_log("run: Started.")
 
-        df_a = pd.read_csv(os.path.join(INPUT_A_PATH, "input_a.csv"))
-        df_b = pd.read_csv(os.path.join(INPUT_B_PATH, "input_b.csv"))
+        df_joined = join_data(
+            f"{INPUT_1_DIR}/input_a.csv", f"{INPUT_2_DIR}/input_b.csv"
+        )
+        print_log("run: Joined data.")
 
-        # Join on leftmost columns of both dataframes
-        key_a = df_a.columns[0]
-        key_b = df_b.columns[0]
-        result = pd.merge(df_a, df_b, left_on=key_a, right_on=key_b)
-        # Drop the redundant key
-        result = result.drop(columns=[key_a, key_b])
+        df_joined.to_csv(f"{OUTPUT_1_DIR}/output_a.csv", index=False)
+        print_log("run: Saved output_a.csv.")
 
-        print_log("join result shape:" + str(result.shape))
-        print_memory_usage()
+        df_joined.to_csv(f"{OUTPUT_2_DIR}/output_b.csv", index=False)
+        print_log("run: Saved output_b.csv.")
 
-        os.makedirs(OUTPUT_A_PATH, exist_ok=True)
-
-        # 結果の保存
-        result.to_csv(os.path.join(OUTPUT_A_PATH, "output.csv"), index=False)
-
+        print_log("run: Completed.")
     except BaseException as e:
-        try:
-            os.makedirs(OUTPUT_A_PATH, exist_ok=True)
-            with open(os.path.join(OUTPUT_A_PATH, "error.log"), "w") as error_file:
-                traceback.print_exc(file=error_file)
-        except Exception:
-            pass  # エラーログの書き込みに失敗しても続行
+        print_log(f"error type: {type(e).__name__}")
+
+        tb = traceback.extract_tb(e.__traceback__)
+        if tb:
+            for i, frame in enumerate(tb):
+                print_log(f"error location {i + 1}: {frame.filename}:{frame.lineno}")
         raise e
