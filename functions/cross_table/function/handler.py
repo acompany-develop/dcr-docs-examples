@@ -80,16 +80,16 @@ def run():
         print_log("run: Started.")
 
         df_cross_table = cross_table_data(
-            f"{INPUT_1_DIR}/input_a.csv", f"{INPUT_2_DIR}/input_b.csv"
+            f"{INPUT_1_DIR}/input_1.csv", f"{INPUT_2_DIR}/input_2.csv"
         )
         print_log("run: Cross table data created.")
 
         # polarsのDataFrameを直接保存
-        df_cross_table.write_csv(f"{OUTPUT_1_DIR}/output.csv")
-        print_log("run: Saved output.csv to output_1.")
+        df_cross_table.write_csv(f"{OUTPUT_1_DIR}/output_1.csv")
+        print_log("run: Saved output_1.csv to output_1.")
 
-        df_cross_table.write_csv(f"{OUTPUT_2_DIR}/output.csv")
-        print_log("run: Saved output.csv to output_2.")
+        df_cross_table.write_csv(f"{OUTPUT_2_DIR}/output_2.csv")
+        print_log("run: Saved output_2.csv to output_2.")
 
         print_log("run: Completed.")
     except BaseException as e:
