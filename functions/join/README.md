@@ -13,25 +13,25 @@ Join Functionは、2つのCSVファイルを結合する関数です。両方の
 
 ## 入力データ
 
-### input_a.csv (user1専用入力データ)
-- **パス**: `/work/inputs/input_1/input_a.csv`
+### input_1.csv (user1専用入力データ)
+- **パス**: `/work/inputs/input_1/input_1.csv`
 - **形式**: CSVファイル
 - **要件**: 最左列が結合キーとして使用される
 
-### input_b.csv (user2専用入力データ)
-- **パス**: `/work/inputs/input_2/input_b.csv`
+### input_2.csv (user2専用入力データ)
+- **パス**: `/work/inputs/input_2/input_2.csv`
 - **形式**: CSVファイル
 - **要件**: 最左列が結合キーとして使用される
 
 ## 出力データ
 
-### output_a.csv (user1専用出力データ)
-- **パス**: `/work/outputs/output_1/output_a.csv`
+### output_1.csv (user1専用出力データ)
+- **パス**: `/work/outputs/output_1/output_1.csv`
 - **形式**: CSVファイル
 - **内容**: 結合されたデータ（重複キー列は削除済み）
 
-### output_b.csv (user2専用出力データ)
-- **パス**: `/work/outputs/output_2/output_b.csv`
+### output_2.csv (user2専用出力データ)
+- **パス**: `/work/outputs/output_2/output_2.csv`
 - **形式**: CSVファイル
 - **内容**: 結合されたデータ（重複キー列は削除済み）
 
@@ -41,16 +41,16 @@ Join Functionは、2つのCSVファイルを結合する関数です。両方の
 ## アルゴリズム
 
 1. **データ読み込み**
-   - `input_a.csv`を読み込み
-   - `input_b.csv`を読み込み
+   - `input_1.csv`を読み込み
+   - `input_2.csv`を読み込み
 
 2. **キー抽出**
    - 両データフレームの最左列を結合キーとして抽出
 
 3. **データ結合**
    - `pandas.merge()`を使用して内部結合を実行
-   - `left_on`: input_aの最左列
-   - `right_on`: input_bの最左列
+   - `left_on`: input_1の最左列
+   - `right_on`: input_2の最左列
 
 4. **重複キー削除**
    - 結合後の重複したキー列を削除
@@ -62,7 +62,7 @@ Join Functionは、2つのCSVファイルを結合する関数です。両方の
 
 ### 入力ファイル例
 
-**input_a.csv**:
+**input_1.csv**:
 ```csv
 id,name,age
 1,Alice,25
@@ -70,7 +70,7 @@ id,name,age
 3,Charlie,35
 ```
 
-**input_b.csv**:
+**input_2.csv**:
 ```csv
 id,city,salary
 1,Tokyo,50000
@@ -80,14 +80,7 @@ id,city,salary
 
 ### 出力ファイル例
 
-**output_a.csv** (user1用):
-```csv
-name,age,city,salary
-Alice,25,Tokyo,50000
-Bob,30,Osaka,60000
-```
-
-**output_b.csv** (user2用):
+**output_1.csv・output_2.csv** (user1・user2用):
 ```csv
 name,age,city,salary
 Alice,25,Tokyo,50000
