@@ -39,19 +39,8 @@ def cross_table_data(input_1_path: str, input_2_path: str):
     key_a = lf_a.columns[0]
     key_b = lf_b.columns[0]
 
-    # 列名をリネーム
-    cols_to_rename_a = [col for col in lf_a.columns if col != key_a]
-    rename_map_a = {col: f"0:{col}" for col in cols_to_rename_a}
-    lf_a_renamed = lf_a.rename(rename_map_a)
-
-    cols_to_rename_b = [col for col in lf_b.columns if col != key_b]
-    rename_map_b = {col: f"1:{col}" for col in cols_to_rename_b}
-    lf_b_renamed = lf_b.rename(rename_map_b)
-
     # データを結合
-    lf_joined = lf_a_renamed.join(
-        lf_b_renamed, left_on=key_a, right_on=key_b, how="inner"
-    )
+    lf_joined = lf_a.join(lf_b, left_on=key_a, right_on=key_b, how="inner")
 
     # 属性列を特定（キー列以外）
     attribute_cols = [col for col in lf_joined.columns if col != key_a and col != key_b]
@@ -80,16 +69,16 @@ def run():
         print_log("run: Started.")
 
         df_cross_table = cross_table_data(
-            f"{INPUT_1_DIR}/input_a.csv", f"{INPUT_2_DIR}/input_b.csv"
+            f"{INPUT_1_DIR}/input_1.csv", f"{INPUT_2_DIR}/input_2.csv"
         )
         print_log("run: Cross table data created.")
 
         # polarsのDataFrameを直接保存
-        df_cross_table.write_csv(f"{OUTPUT_1_DIR}/output.csv")
-        print_log("run: Saved output.csv to output_1.")
+        df_cross_table.write_csv(f"{OUTPUT_1_DIR}/output_1.csv")
+        print_log("run: Saved output_1.csv to output_1.")
 
-        df_cross_table.write_csv(f"{OUTPUT_2_DIR}/output.csv")
-        print_log("run: Saved output.csv to output_2.")
+        df_cross_table.write_csv(f"{OUTPUT_2_DIR}/output_2.csv")
+        print_log("run: Saved output_2.csv to output_2.")
 
         print_log("run: Completed.")
     except BaseException as e:
