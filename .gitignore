@@ -1,5 +1,4 @@
 **/.env
 **/encrypted-files.yaml
 **/function/packages/
-**/functions/*/outputs/
 venv/
