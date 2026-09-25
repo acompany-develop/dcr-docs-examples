@@ -1,10 +1,10 @@
 # DCR Documentation Examples
 
-このリポジトリは、AutoPrivacy DCR（Data Clean Room）のチュートリアルとDCR上で実行する関数の実装例を提供します。
+このリポジトリは、Acompany Clean Rooms（旧AutoPrivacy DCR、Data Clean Room）のチュートリアルとDCR上で実行する関数の実装例を提供します。
 
 ## 概要
 
-AutoPrivacy DCRは、複数のテナント間で安全にデータを共有し、プライバシーを保護しながらデータ分析を実行するためのプラットフォームです。このリポジトリには、チュートリアルとDCR上で実行する関数の実装例が含まれています。
+Acompany Clean Roomsは、複数のテナント間で安全にデータを共有し、プライバシーを保護しながらデータ分析を実行するためのプラットフォームです。このリポジトリには、チュートリアルとDCR上で実行する関数の実装例が含まれています。
 
 ## プロジェクト構成
 
@@ -43,5 +43,5 @@ dcr-docs-examples/
 ## ドキュメント
 
 詳細なドキュメントは以下を参照してください：
-- [AutoPrivacy Cloud DCR ユーザーガイド](https://acompany-develop.github.io/autoprivacy-cloud/apc-dcr/)
+- [Acompany Clean Rooms ユーザーガイド](https://acompany-develop.github.io/autoprivacy-cloud/apc-dcr/)
 - [APC-CLI リファレンス](https://acompany-develop.github.io/autoprivacy-cloud/apc-cli/)
